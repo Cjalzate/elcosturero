@@ -585,6 +585,25 @@
     .carrusel-curvo { padding: 2.4rem 0.5rem; }
   }
 
+  /* Flechas para pasar las fotos a mano, además de arrastrar o esperar
+     el giro automático. Las agrega el JS solo (no hace falta tocar el
+     HTML de cada galería) — busca "carrusel-flecha" más abajo. */
+  .carrusel-flecha {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background-color: rgba(255,255,255,0.85); color: var(--color-principal);
+    font-size: 1.3rem; line-height: 1; cursor: pointer; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  .carrusel-flecha:hover { background-color: #fff; transform: translateY(-50%) scale(1.08); }
+  .carrusel-flecha--izq { left: 0.4rem; }
+  .carrusel-flecha--der { right: 0.4rem; }
+  @media (max-width: 720px) {
+    .carrusel-flecha { width: 34px; height: 34px; font-size: 1.1rem; }
+  }
+
   /* ============================================================
      CARRUSEL CIRCULAR (fotos en anillo 3D, girando en círculo completo)
      ------------------------------------------------------------
@@ -1686,12 +1705,46 @@
         temporizador = setInterval(function () {
           activo = (activo + 1) % total;
           actualizar();
-        }, 2800);
+        }, 5200);
       }
 
       actualizar();
       iniciarGiro();
       window.addEventListener('resize', actualizar);
+
+      /* Flechas para pasar las fotos a mano (izquierda/derecha), además
+         de arrastrar o esperar el giro automático. Cada click reinicia
+         el temporizador del giro, para que no "salte" justo después de
+         un click manual. */
+      function irA(nuevoIndice) {
+        activo = ((nuevoIndice % total) + total) % total;
+        actualizar();
+        clearInterval(temporizador);
+        iniciarGiro();
+      }
+
+      var flechaIzq = document.createElement('button');
+      flechaIzq.type = 'button';
+      flechaIzq.className = 'carrusel-flecha carrusel-flecha--izq';
+      flechaIzq.setAttribute('aria-label', 'Foto anterior');
+      flechaIzq.innerHTML = '‹';
+      flechaIzq.addEventListener('click', function (evento) {
+        evento.stopPropagation();
+        irA(activo - 1);
+      });
+
+      var flechaDer = document.createElement('button');
+      flechaDer.type = 'button';
+      flechaDer.className = 'carrusel-flecha carrusel-flecha--der';
+      flechaDer.setAttribute('aria-label', 'Foto siguiente');
+      flechaDer.innerHTML = '›';
+      flechaDer.addEventListener('click', function (evento) {
+        evento.stopPropagation();
+        irA(activo + 1);
+      });
+
+      carrusel.appendChild(flechaIzq);
+      carrusel.appendChild(flechaDer);
 
       /* Pausa el giro mientras el mouse está encima, para que se pueda
          mirar bien una foto o hacer click sin que se mueva de repente. */
